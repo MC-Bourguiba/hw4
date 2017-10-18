@@ -250,8 +250,8 @@ def train(env,
 
         # Collect Nrl on policy trajectories
         drl= sample(env,mpc_controller,cost_fn,
-                              num_paths=3,
-                              horizon=50,
+                              num_paths=num_paths_onpol,
+                              horizon=env_horizon,
                               render=False,
                               verbose=False)
         import pdb
