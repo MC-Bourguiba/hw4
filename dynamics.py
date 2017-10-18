@@ -144,7 +144,7 @@ class NNDynamicsModel():
               #input_batch,output_batch=sample(normalized_input,normalized_output,self.batch_size)
 
               a,b=self.sess.run([self.update_op,self.loss],feed_dict={self.input_ph: input_batch,self.sy_output_t:output_batch})
-              print(b)
+        print("loss :",b)
 
 
     def predict(self, states, actions):

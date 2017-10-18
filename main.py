@@ -51,7 +51,7 @@ def sample(env,
             start=time.time()
             action = controller.get_action(obs[None, :])
             end=time.time()
-            if steps%50==0:
+            if steps%200==0:
                 print("steps : ",steps)
                 print("get action time:",end-start)
             observations.append(obs)
@@ -79,20 +79,20 @@ def sample(env,
     data['rewards']=[]
     data['returns']=returns
     data['costs']=costs
-    for path in paths:
-        import pdb
 
-        data['observations']=data['observations']+path['observations']
-        data['next_observations'] = data['next_observations'] + path['next_observations']
-        data['actions'] = data['actions'] + path['actions']
-        data['rewards'] = data['rewards'] + path['rewards']
+
+    data['observations']=np.concatenate([path['observations'] for path in paths])
+    data['next_observations'] = np.concatenate([path['next_observations'] for path in paths])
+    data['actions'] = np.concatenate([path['actions'] for path in paths])
+    data['rewards'] = np.concatenate([path['rewards'] for path in paths])
 
 
 
     data['deltas']=[st1-st for st1,st in zip(data['next_observations'],data['observations'])]
 
 
-
+    import pdb
+    #pdb.set_trace()
     return data
 
 # Utility to compute cost a path for a given cost function
@@ -254,6 +254,7 @@ def train(env,
                               horizon=env_horizon,
                               render=False,
                               verbose=False)
+        print("loss :", dyn_model.get_loss(drl))
         import pdb
         #pdb.set_trace()
         data['observations']=np.concatenate((np.array(data['observations']),np.array(drl['observations'])))
