@@ -186,7 +186,7 @@ def train(env,
 
 
     """ YOUR CODE HERE """
-    drand = sample(env, random_controller, cost_fn,num_paths_random, env_horizon)
+    drand = sample(env, random_controller, cost_fn,num_paths_random, 100)
 
     #========================================================
     # 
@@ -236,7 +236,7 @@ def train(env,
     # Note: You don't need to use a mixing ratio in this assignment for new and old data as described in https://arxiv.org/abs/1708.02596
     #
     data=drand
-    for itr in range(onpol_iters):
+    for itr in range(10):
         """ YOUR CODE HERE """
 
         print("*****iter****** :",itr)
@@ -250,14 +250,22 @@ def train(env,
 
         # Collect Nrl on policy trajectories
         drl= sample(env,mpc_controller,cost_fn,
-                              num_paths=1,
-                              horizon=500,
+                              num_paths=3,
+                              horizon=50,
                               render=False,
                               verbose=False)
         import pdb
-        pdb.set_trace()
-        data['observations']=np.concatenate(data['observations'],drl['observations'])
-
+        #pdb.set_trace()
+        data['observations']=np.concatenate((np.array(data['observations']),np.array(drl['observations'])))
+        data['next_observations'] = np.concatenate((np.array(data['next_observations']),
+                                                    np.array(drl['next_observations'])))
+        data['deltas'] = np.concatenate((np.array(data['deltas']),
+                                                    np.array(drl['deltas'])))
+        data['actions'] = np.concatenate((np.array(data['actions']), np.array(drl['actions'])))
+        data['returns'] = np.concatenate((np.array(data['returns']), np.array(drl['returns'])))
+        data['costs'] = np.concatenate((np.array(data['returns']), np.array(drl['costs'])))
+        returns=np.array(drl['returns'])
+        costs=np.array(drl['costs'])
 
         # Aggregate data
 
