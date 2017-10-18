@@ -53,6 +53,7 @@ def sample(input,output,batch_size):
     input_batch=[]
     output_batch=[]
     full_data_set_size=len(input)
+    print(full_data_set_size)
     for i in range(batch_size):
         import random
         index=random.choice(list(range(full_data_set_size)))
@@ -106,6 +107,20 @@ class NNDynamicsModel():
         self.update_op = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss)
 
 
+    def get_loss(self, data):
+        """
+        Write a function to take in a dataset of (unnormalized)states, (unnormalized)actions, (unnormalized)next_states and fit the dynamics model going from normalized states, normalized actions to normalized state differences (s_t+1 - s_t)
+        """
+        """YOUR CODE HERE """
+
+        #normalize data
+
+        normalized_input, normalized_output = compute_normalized_input_output(data, self.normalization)
+
+
+
+        b=self.sess.run([self.loss],feed_dict={self.input_ph: normalized_input,self.sy_output_t:normalized_output})
+        return b
 
     def fit(self, data):
         """
@@ -117,10 +132,19 @@ class NNDynamicsModel():
 
         normalized_input, normalized_output = compute_normalized_input_output(data, self.normalization)
         for i in range(self.iterations):
-            input_batch,output_batch=sample(normalized_input,normalized_output,self.batch_size)
+            import random
+            combined = list(zip(normalized_input, normalized_output))
+            random.shuffle(combined)
 
-            a,b=self.sess.run([self.update_op,self.loss],feed_dict={self.input_ph: input_batch,self.sy_output_t:output_batch})
-            print(b)
+            normalized_input[:], normalized_output[:]= zip(*combined)
+            for j in range(0, len(normalized_output), self.batch_size):
+              input_batch = normalized_input[j:j + self.batch_size]
+              output_batch = normalized_output[j:j + self.batch_size]
+
+              #input_batch,output_batch=sample(normalized_input,normalized_output,self.batch_size)
+
+              a,b=self.sess.run([self.update_op,self.loss],feed_dict={self.input_ph: input_batch,self.sy_output_t:output_batch})
+              print(b)
 
 
     def predict(self, states, actions):
@@ -144,6 +168,7 @@ class NNDynamicsModel():
 
         normalized_states = (states - mean_obs) / std_obs
         normalized_actions = (actions - mean_action) / std_action
+
         #pdb.set_trace()
         normalized_input = np.concatenate((normalized_states, normalized_actions), axis=1)
         normalized_output=self.sess.run(self.nn,feed_dict={self.input_ph:normalized_input})
