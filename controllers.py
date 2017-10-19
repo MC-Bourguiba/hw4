@@ -50,56 +50,20 @@ class MPCcontroller(Controller):
         start_time=time.time()
 
         ac_dim = self.env.action_space.shape[0]
-        initial_states=[state[0]]*self.num_simulated_paths
-        #pdb.set_trace()
-        initial_actions=[np.random.uniform(self.env.action_space.low,self.env.action_space.high,ac_dim) for _
-                        in initial_states]
-        states_list=[[]]*(self.horizon+1)
-        action_list=[[]]*(self.horizon+1)
-        states_list[0]=initial_states
-        action_list[0]=initial_actions
+        states=np.array([state[0]]*self.num_simulated_paths)
+        states=np.expand_dims(states, axis=0)
 
+        sample_actions=np.random.uniform(self.env.action_space.low,self.env.action_space.high,
+                                         (self.horizon,self.num_simulated_paths,ac_dim))
 
+        for i in range(self.horizon):
+            import pdb
 
+            next_states=self.dyn_model.predict(states[-1],sample_actions[i])
+            next_states = np.expand_dims(next_states, axis=0)
+            states=np.vstack((states,next_states))
 
-        for i in range(1,self.horizon+1):
+        
+        costs=trajectory_cost_fn(self.cost_fn, states[:-1], sample_actions, states[1:])
 
-            act=[np.random.uniform(self.env.action_space.low,self.env.action_space.high,ac_dim) for _
-                        in initial_states]
-            st=states_list[i-1]
-            #pdb.set_trace()
-            next_states = self.dyn_model.predict(st, act)
-            states_list[i]=next_states
-            action_list[i]=act
-
-        states_list=np.array(states_list)
-        states_list=np.transpose(states_list,(1,0,2))
-        action_list=np.array(action_list)
-        action_list=np.transpose(action_list,(1,0,2))
-
-
-
-
-        obs=[np.array(x) for x in states_list[0][:-1]]
-        next_obs=[np.array(x) for x in states_list[0][1:]]
-        actions=[np.array(x) for x in action_list[0][:-1]]
-
-        best_costs = trajectory_cost_fn(self.cost_fn,
-                                   obs, actions,
-                                   next_obs)
-
-        argmin=0
-        for i in range(self.num_simulated_paths):
-            obs = [np.array(x) for x in states_list[i][:-1]]
-            next_obs = [np.array(x) for x in states_list[i][1:]]
-            actions = [np.array(x) for x in action_list[i][:-1]]
-            cost= trajectory_cost_fn(self.cost_fn,
-                                            obs, actions,
-                                            next_obs)
-            if cost<=best_costs:
-
-                argmin=i
-        end_time = time.time()
-
-
-        return action_list[argmin][0]
+        return sample_actions[0][np.argmin(costs),:]
