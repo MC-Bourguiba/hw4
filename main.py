@@ -10,15 +10,13 @@ import os
 import copy
 import matplotlib.pyplot as plt
 from cheetah_env import HalfCheetahEnvNew
-def substract_elementwise(list_1,list_2):
-    return [x2-x1 for x1,x2 in zip(list_1,list_2)]
-def divide_elementwise(list_1,list_2):
-    return[x1/x2 for x1,x2 in zip(list_1,list_2)]
+
+
 def sample(env, 
            controller,
            cost_fn,
-           num_paths=10, 
-           horizon=1000, 
+           num_paths=10,
+           horizon=100,
            render=False,
            verbose=False):
     """
@@ -28,14 +26,16 @@ def sample(env,
     """
 
 
-
+    if controller.isRandom:
+        num_paths=20
     paths = []
     returns = []
     costs=[]
     """ YOUR CODE HERE """
     max_steps = horizon
     for i in range(num_paths):
-        print('iter', i)
+        if i%10==0:
+            print('generating path : ', i)
         obs = env.reset()
         done = False
         totalr = 0.
@@ -66,10 +66,12 @@ def sample(env,
             if steps >= max_steps:
                 break
         returns.append(totalr)
+
         path['observations'] = observations
         path['next_observations'] = next_oberv
         path['actions'] = actions
         path['rewards'] = rewards
+
         costs.append(trajectory_cost_fn(cost_fn,  observations,actions,next_oberv))
         paths.append(path)
     data=dict()
@@ -118,14 +120,29 @@ def plot_comparison(env, dyn_model):
     """
     Write a function to generate plots comparing the behavior of the model predictions for each element of the state to the actual ground truth, using randomly sampled actions. 
     """
-    """ YOUR CODE HERE """
+    horizon = 1000
+    # num_simulated_paths = 15
+
+    MSEs = []
+
+    next_obs = env.reset()
+    # import pdb; pdb.set_trace()
+    for i in range(horizon):
+        obs = next_obs
+        action = np.random.uniform(low=-1.0, high=1.0,
+                                   size=env.action_space.shape[0])
+        predicted_next_obs = dyn_model.predict(obs[None], action[None])
+        next_obs, rew, done, _ = env.step(action)
+        MSEs.append(np.linalg.norm(predicted_next_obs[0, :] - next_obs) / 20.0)
+
+    print(np.mean(MSEs))
     pass
 
 def train(env, 
          cost_fn,
          logdir=None,
          render=False,
-         learning_rate=1e-3,
+         learning_rate=1e-2,
          onpol_iters=10,
          dynamics_iters=60,
          batch_size=512,
@@ -236,16 +253,16 @@ def train(env,
     # Note: You don't need to use a mixing ratio in this assignment for new and old data as described in https://arxiv.org/abs/1708.02596
     #
     data=drand
-    for itr in range(10):
+    for itr in range(15):
         """ YOUR CODE HERE """
 
         print("*****iter****** :",itr)
         # Fit the dynamics model
 
-        dyn_model.fit(data)
+        mpc_controller.dyn_model.fit(data)
 
 
-        #plot_comparison(env, dyn_model);  # break
+        plot_comparison(env, dyn_model);  # break
         # import pdb; pdb.set_trace()
 
         # Collect Nrl on policy trajectories
@@ -268,7 +285,7 @@ def train(env,
         returns=np.array(drl['returns'])
         costs=np.array(drl['costs'])
 
-        # Aggregate data
+
 
         # LOGGING
         # Statistics for performance of MPC policy using

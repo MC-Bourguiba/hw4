@@ -16,6 +16,7 @@ class RandomController(Controller):
     def __init__(self, env):
         """ YOUR CODE HERE """
         self.env = env
+        self.isRandom=True
 
     def get_action(self, state):
         """ YOUR CODE HERE """
@@ -42,6 +43,7 @@ class MPCcontroller(Controller):
         self.horizon = horizon
         self.cost_fn = cost_fn
         self.num_simulated_paths = num_simulated_paths
+        self.isRandom=False
 
     def get_action(self, state):
         """ YOUR CODE HERE """
@@ -63,7 +65,7 @@ class MPCcontroller(Controller):
             next_states = np.expand_dims(next_states, axis=0)
             states=np.vstack((states,next_states))
 
-        
+
         costs=trajectory_cost_fn(self.cost_fn, states[:-1], sample_actions, states[1:])
 
         return sample_actions[0][np.argmin(costs),:]
