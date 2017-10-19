@@ -27,7 +27,7 @@ def sample(env,
 
 
     if controller.isRandom:
-        num_paths=20
+        num_paths=200
     paths = []
     returns = []
     costs=[]
@@ -51,9 +51,9 @@ def sample(env,
             start=time.time()
             action = controller.get_action(obs[None, :])
             end=time.time()
-            if steps%200==0:
-                print("steps : ",steps)
-                print("get action time:",end-start)
+           
+                
+                
             observations.append(obs)
             actions.append(action)
             obs, r, done, _ = env.step(action)
