@@ -1,2 +1,0 @@
-Iteration	AverageCost	StdCost	MinimumCost	MaximumCost	AverageReturn	StdReturn	MinimumReturn	MaximumReturn
-0	5426.17783455	0.0	5426.17783455	5426.17783455	-272.66859466	0.0	-272.66859466	-272.66859466
